@@ -1,2 +1,93 @@
-# AI-TEST2
-Tester RA Tool
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grant Checklist Generator (Gemini) verstion 4</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        textarea { width: 100%; padding: 10px; font-family: inherit; }
+        button { padding: 10px 20px; background-color: #0b57d0; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #004aab; }
+        #output { background: #f8f9fa; padding: 20px; white-space: pre-wrap; border-radius: 4px; border: 1px solid #dadce0; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<h1>Grant Checklist Generator</h1>
+<p>Paste your grant guidelines below to generate an organized checklist via Gemini.</p>
+
+<textarea id="inputText" rows="10" placeholder="Paste your grant text here..."></textarea>
+<br><br>
+
+<button onclick="generateChecklist()">Generate Checklist</button>
+
+<h2>Checklist:</h2>
+<div id="output">Your checklist will appear here...</div>
+
+<script>
+async function generateChecklist() {
+    const input = document.getElementById("inputText").value;
+    const outputDiv = document.getElementById("output");
+
+    if (!input.trim()) {
+        alert("Please paste some grant text first!");
+        return;
+    }
+
+    outputDiv.innerText = "Analyzing grant guidelines with Gemini...";
+
+    // 1. Paste your Google AI Studio API key here (Must start with AIzaSy)
+    const GEMINI_API_KEY = “here"; 
+    const MODEL_NAME = "gemini-2.5-flash";
+    
+    // 2. Setting key as query parameter fixes browser-based OAuth/CORS credential errors
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${GEMINI_API_KEY}`;
+
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                contents: [
+                    {
+                        parts: [
+                            {
+                                text: `You are a research administrator.
+                                
+Convert this grant into a checklist of tasks organized into:
+- Narrative
+- Budget
+- Administrative
+- Supporting Documents
+- Compliance
+
+Grant text:
+${input}`
+                            }
+                        ]
+                    }
+                ]
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            outputDiv.innerText = data.candidates[0].content.parts[0].text;
+        } else {
+            outputDiv.innerText = `Gemini API Error: ${data.error ? data.error.message : 'Unknown error'}\nStatus: ${data.error ? data.error.status : ''}`;
+        }
+
+    } catch (error) {
+        console.error("Error:", error);
+        outputDiv.innerText = "An error occurred while connecting to the Gemini API. Check your browser's Developer Console (F12) for detailed logs.";
+    }
+}
+</script>
+
+</body>
+</html>
+
